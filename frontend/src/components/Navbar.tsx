@@ -1,41 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import styles from './Navbar.module.css';
-import { supabase } from '../supabaseClient';
-import { useNavigate } from 'react-router-dom';
+// File: frontend/src/components/Navbar.tsx
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const Navbar = () => {
-  const [user, setUser] = useState<any>(null);
-  const navigate = useNavigate();
+interface NavbarProps {
+  user: any;
+}
 
-  useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
+function Navbar({ user }: NavbarProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleClick = () => {
-    if (user) navigate('/account');
-    else navigate('/login'); // You can replace this with your auth flow or modal
+  const handleLogout = async () => {
+    const supabase = await import('@supabase/supabase-js').then(m =>
+      m.createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
+    );
+    await supabase.auth.signOut();
+    window.location.reload(); // force logout update
   };
 
   return (
-    <nav className={styles.navbar}>
-      <h1 className={styles.logo}>🦷 The Dentist of Quotes</h1>
-      <div className={styles.profile}>
-        <button onClick={handleClick}>
-          {user ? 'Account' : 'Login / Register'}
+    <div className="flex justify-end items-center p-4 bg-gray-100 shadow">
+      <div className="relative">
+        <button onClick={() => setDropdownOpen(!dropdownOpen)} className="focus:outline-none">
+          <img
+            src="https://api.iconify.design/mdi:account-circle.svg?color=%23000&width=32"
+            alt="profile"
+            className="w-8 h-8"
+          />
         </button>
+
+        {dropdownOpen && (
+          <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md">
+            {user ? (
+              <>
+                <Link to="/account" className="block px-4 py-2 hover:bg-gray-100">Account</Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/auth" className="block px-4 py-2 hover:bg-gray-100">
+                Login / Register
+              </Link>
+            )}
+          </div>
+        )}
       </div>
-    </nav>
+    </div>
   );
-};
+}
 
 export default Navbar;

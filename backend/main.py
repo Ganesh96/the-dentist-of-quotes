@@ -3,13 +3,15 @@ import httpx
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from dotenv import load_dotenv
-
 load_dotenv()
 
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # Use service role for scheduled jobs
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
+
 
 headers = {
     "apikey": SUPABASE_KEY,
@@ -18,6 +20,15 @@ headers = {
 
 class ProfileUpdate(BaseModel):
     interests: list[str]
+
+@app.get("/daily-quote")
+def get_daily_quote():
+    result = supabase.table("quotes").select("*").execute()
+    if result.data:
+        quote = random.choice(result.data)
+        return {"quote": quote["text"], "author": quote.get("author", "Unknown")}
+    return {"quote": "No quotes available", "author": ""}
+
 
 @app.get("/me")
 async def get_profile():

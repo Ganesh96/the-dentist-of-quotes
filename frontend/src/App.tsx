@@ -39,6 +39,8 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/interests" element={<Interests user={user} />} />
+                <Route path="/quotes" element={<Quotes user={user} />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route path="/account" element={user ? <Account user={user} /> : <Navigate to="/" />} />
               </Routes>
             </main>

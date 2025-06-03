@@ -1,10 +1,25 @@
-import React from 'react';
+import { useContext } from 'react';
+import { SupabaseContext } from '../App';
 
-const Account = () => {
+const Account = ({ user }) => {
+  const supabase = useContext(SupabaseContext);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error('Logout error:', error);
+  };
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Your Account</h2>
-      <p>Account settings and info will appear here.</p>
+    <div>
+      <h2 className="text-xl font-bold mb-4">Account Info</h2>
+      <p><strong>Email:</strong> {user.email}</p>
+
+      <button
+        onClick={handleLogout}
+        className="mt-4 px-4 py-2 bg-red-600 text-white rounded"
+      >
+        Log Out
+      </button>
     </div>
   );
 };

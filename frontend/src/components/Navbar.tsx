@@ -1,55 +1,73 @@
-// File: frontend/src/components/Navbar.tsx
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AppContext } from '../App'; // Assuming AppContext is exported from App.tsx
+import styles from './Navbar.module.css'; // Import CSS Module
 
-interface NavbarProps {
-  user: any;
-}
+const Navbar = () => {
+  const appContext = useContext(AppContext);
+  const user = appContext?.user;
+  const supabase = appContext?.supabase;
+  const navigate = useNavigate();
 
-function Navbar({ user }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
-    const supabase = await import('@supabase/supabase-js').then(m =>
-      m.createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
-    );
-    await supabase.auth.signOut();
-    window.location.reload(); // force logout update
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Logout error:', error);
+    } else {
+      setDropdownOpen(false);
+      navigate('/auth');
+    }
   };
 
-  return (
-    <div className="flex justify-end items-center p-4 bg-gray-100 shadow">
-      <div className="relative">
-        <button onClick={() => setDropdownOpen(!dropdownOpen)} className="focus:outline-none">
-          <img
-            src="https://api.iconify.design/mdi:account-circle.svg?color=%23000&width=32"
-            alt="profile"
-            className="w-8 h-8"
-          />
-        </button>
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-        {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md">
-            {user ? (
-              <>
-                <Link to="/account" className="block px-4 py-2 hover:bg-gray-100">Account</Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/auth" className="block px-4 py-2 hover:bg-gray-100">
-                Login / Register
-              </Link>
-            )}
-          </div>
-        )}
+  return (
+    <nav className={styles.navbar}>
+      <div className={styles.navbarContainer}>
+        <div className={styles.appName}>
+          {/* Optional: You can put an app name or leave it empty if sidebar has it */}
+          {/* <Link to="/">The Dentist of Quotes</Link> */}
+        </div>
+        <div className={styles.navMenu}>
+          {user ? (
+            <div className={styles.dropdown}>
+              <button onClick={toggleDropdown} className={styles.dropdownToggle}>
+                {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+              </button>
+              {dropdownOpen && (
+                <div className={styles.dropdownMenu}>
+                  <div className={styles.dropdownHeader}>
+                    <p>Signed in as</p>
+                    <p className={styles.dropdownEmail}>{user.email}</p>
+                  </div>
+                  <Link
+                    to="/account"
+                    onClick={() => setDropdownOpen(false)}
+                    className={styles.dropdownItem}
+                  >
+                    Account
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className={`${styles.dropdownItem} ${styles.dropdownButton}`}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/auth" className={styles.navLink}>
+              Login / Register
+            </Link>
+          )}
+        </div>
       </div>
-    </div>
+    </nav>
   );
-}
+};
 
 export default Navbar;

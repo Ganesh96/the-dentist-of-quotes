@@ -1,20 +1,109 @@
-.navbar { /* Targets the main div in Navbar.tsx if you add this class */
-  background-color: #f8f9fa; /* Softer off-white */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03); /* More subtle shadow */
-}
-
-.dropdown { /* Targets the dropdown div */
+.navbar {
   background-color: #ffffff;
-  border: 1px solid #e9ecef; /* Lighter border */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Softer, more diffuse shadow */
-  border-radius: 8px; /* Slightly more rounded corners can feel softer */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 60px; /* Fixed height for the navbar */
+  padding: 0 20px; /* Horizontal padding */
+  display: flex;
+  align-items: center;
 }
 
-.dropdownItem { /* For Link/button elements in the dropdown */
-  padding: 0.75rem 1rem; /* Adjust padding for spaciousness */
-  color: #495057; /* Softer text color */
+.navbarContainer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end; /* Align items to the right (user menu) */
+  align-items: center;
+}
+
+.appName a {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+}
+
+.navMenu {
+  position: relative; /* For dropdown positioning */
+}
+
+.navLink {
+  color: #333;
+  text-decoration: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.navLink:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdownToggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdownToggle:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%; /* Position below the toggle button */
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 200px; /* Adjust as needed */
+  z-index: 1000; /* Ensure it's above other content */
+  margin-top: 8px; /* Small gap */
+}
+
+.dropdownHeader {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdownHeader p {
+  margin: 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.dropdownEmail {
+  font-weight: bold;
+  color: #333 !important; /* Override general p color if needed */
+  word-break: break-all;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  font-size: 0.95em;
+  color: #333;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .dropdownItem:hover {
-  background-color: #f1f3f5; /* Gentle hover */
+  background-color: #f5f5f5;
+}
+
+.dropdownButton {
+  /* Inherits from dropdownItem, no extra styles needed unless specific */
 }

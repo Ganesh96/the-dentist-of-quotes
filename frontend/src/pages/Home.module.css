@@ -1,0 +1,71 @@
+.homeContainer {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .welcomeBox {
+    background-color: #f9f9f9; /* Slightly off-white for the content box */
+    border-radius: 8px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 700px; /* Max width for the content */
+  }
+  
+  .title {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  .subtitle {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 30px;
+  }
+  
+  .quoteLoading p {
+    font-style: italic;
+    color: #777;
+  }
+  
+  .quoteError {
+    color: #d9534f; /* Bootstrap danger color */
+    font-weight: bold;
+  }
+  
+  .quoteBlock {
+    position: relative;
+    padding: 20px;
+    font-style: italic;
+    border-left: 5px solid #007bff;
+    background-color: #e9ecef; /* Light grey for quote background */
+    border-radius: 0 5px 5px 0; /* Rounded right corners */
+    margin-top: 20px;
+    text-align: left;
+  }
+  
+  .quoteText {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #343a40; /* Darker text for quote */
+  }
+  
+  .quoteAuthor {
+    display: block;
+    text-align: right;
+    font-size: 1em;
+    font-weight: normal;
+    font-style: normal;
+    color: #495057; /* Slightly lighter for author */
+  }
+  
+  .noQuote {
+    color: #777;
+    font-style: italic;
+  }
+  

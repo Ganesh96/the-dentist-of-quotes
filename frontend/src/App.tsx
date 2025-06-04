@@ -8,8 +8,6 @@ import Home from './pages/Home';
 import Interests from './pages/Interests';
 import Account from './pages/Account';
 
-
-
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export const SupabaseContext = React.createContext(supabase);

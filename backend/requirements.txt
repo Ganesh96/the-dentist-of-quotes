@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+httpx
+supabase  # <-- Corrected name
+python-jose[cryptography] # If you're using this for JWTs as discussed

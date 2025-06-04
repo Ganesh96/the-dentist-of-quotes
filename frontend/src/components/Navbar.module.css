@@ -1,19 +1,20 @@
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background-color: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  
-  .logo {
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
-  
-  .profile button {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-  }
-  
+.navbar { /* Targets the main div in Navbar.tsx if you add this class */
+  background-color: #f8f9fa; /* Softer off-white */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03); /* More subtle shadow */
+}
+
+.dropdown { /* Targets the dropdown div */
+  background-color: #ffffff;
+  border: 1px solid #e9ecef; /* Lighter border */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Softer, more diffuse shadow */
+  border-radius: 8px; /* Slightly more rounded corners can feel softer */
+}
+
+.dropdownItem { /* For Link/button elements in the dropdown */
+  padding: 0.75rem 1rem; /* Adjust padding for spaciousness */
+  color: #495057; /* Softer text color */
+}
+
+.dropdownItem:hover {
+  background-color: #f1f3f5; /* Gentle hover */
+}

@@ -10,23 +10,24 @@ interface DailyQuote {
 const Home = () => {
   const appContext = useContext(AppContext);
   const user = appContext?.user;
-  const session = appContext?.session; // Get session from AppContext
+  const session = appContext?.session; 
 
   const [dailyQuote, setDailyQuote] = useState<DailyQuote | null>(null);
   const [loadingQuote, setLoadingQuote] = useState(true);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
+  // Use VITE_API_BASE_URL for deployed environment, fallback for local
+  // If VITE_API_BASE_URL is not set, it will default to relative paths (good for same-domain Vercel deployment)
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""; 
+
   useEffect(() => {
     const fetchDailyQuote = async () => {
       setLoadingQuote(true);
       setQuoteError(null);
-      console.log("Home.tsx: Attempting to fetch daily quote.");
-      if (appContext?.loading) {
-        console.log("Home.tsx: App context is still loading, deferring quote fetch.");
-        // Optionally, you could set a short timeout and retry, or rely on session change to re-trigger.
-        // For now, if context is loading, we might not have the session yet.
-        // The dependency array on `session` and `appContext?.loading` should handle re-fetching.
-        setLoadingQuote(false); // Avoid infinite loading state if context never resolves here
+      
+      if (appContext?.loading && !session) { // Wait for initial auth check if loading
+        console.log("Home.tsx: App context loading or no session yet, deferring quote fetch.");
+        setLoadingQuote(false); 
         return;
       }
 
@@ -34,23 +35,21 @@ const Home = () => {
         const headers: HeadersInit = {};
         if (session?.access_token) {
           headers['Authorization'] = `Bearer ${session.access_token}`;
-          console.log("Home.tsx: Sending request with Authorization header.");
-        } else {
-          console.log("Home.tsx: No active session or access token, sending request without Authorization header.");
         }
 
-        const response = await fetch('http://localhost:8000/daily-quote', { headers });
+        // Use the /api prefix for backend calls
+        const response = await fetch(`${API_BASE_URL}/api/daily-quote`, { headers });
         
-        console.log(`Home.tsx: Daily quote response status: ${response.status}`);
-
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-          console.error("Home.tsx: Error fetching daily quote - Response not OK", errorData);
-          throw new Error(errorData.detail || `Failed to fetch quote: ${response.status}`);
+          let errorDetail = `Failed to fetch quote: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.detail || errorDetail;
+          } catch (e) { /* Ignore if response is not JSON */ }
+          throw new Error(errorDetail);
         }
         
         const data: DailyQuote = await response.json();
-        console.log("Home.tsx: Daily quote data received:", data);
         setDailyQuote(data);
 
       } catch (error: any) {
@@ -61,14 +60,9 @@ const Home = () => {
       }
     };
 
-    // Fetch quote if app context is done loading.
-    // The session dependency will re-trigger if the session changes (login/logout).
-    if (!appContext?.loading) {
-        fetchDailyQuote();
-    } else {
-        console.log("Home.tsx: App context still loading, fetchDailyQuote not called yet.");
-    }
-  }, [session, appContext?.loading]); // Re-fetch when session changes or app context loading state changes
+    fetchDailyQuote();
+
+  }, [session, appContext?.loading, API_BASE_URL]); // Add API_BASE_URL to dependencies
 
   return (
     <div className={styles.homeContainer}>

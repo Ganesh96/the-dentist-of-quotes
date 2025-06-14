@@ -2,13 +2,15 @@ import { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { createClient, SupabaseClient, type User, type Session } from '@supabase/supabase-js';
 
-import Sidebar from './components/Sidebar'; // Ensure file is named Sidebar.tsx
+// CRITICAL: This import assumes your file is located at 'src/components/Sidebar.tsx'
+// with a capital 'S'. Please verify the filename's capitalization.
+import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Interests from './pages/Interests';
 import Account from './pages/Account';
-import QuotesPage from './pages/Quotes'; // Renamed from Quotes
-import AuthPage from './pages/Auth';   // Renamed from Auth
+import QuotesPage from './pages/Quotes';
+import AuthPage from './pages/Auth';
 
 import './App.css';
 
@@ -41,9 +43,7 @@ function App() {
     const getSession = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Error getting session:", error.message);
-        }
+        if (error) console.error("Error getting session:", error.message);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
       } catch (e) {
@@ -61,9 +61,7 @@ function App() {
       setLoading(false);
     });
 
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
+    return () => authListener?.subscription?.unsubscribe();
   }, []);
 
   if (loading) {

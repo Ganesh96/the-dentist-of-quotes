@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getProfile, updateProfile } from './api';
 
-interface ProfileData {
-  interests: string[];
-}
+// The 'ProfileData' interface was declared but not used, so it has been removed.
 
 export default function Dashboard() {
   const [interests, setInterests] = useState<string[]>([]);
@@ -11,6 +9,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     getProfile().then(data => {
+      // Check if data and data.interests exist and if it's an array
       if (data && Array.isArray(data.interests)) {
         setInterests(data.interests);
       }

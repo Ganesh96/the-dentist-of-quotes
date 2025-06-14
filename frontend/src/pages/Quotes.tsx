@@ -1,152 +1,107 @@
 import { useContext, useEffect, useState } from 'react';
-import { SupabaseContext } from '../App'; // Ensure this path is correct for your project structure
+import { SupabaseContext } from '../App';
+import { type User } from '@supabase/supabase-js';
 
-// Define a type for your quote objects for better type safety
 interface Quote {
-  id?: string; // Assuming quotes might have an ID from the database
-  quote: string;
+  id: string;
+  text: string; // Your DB schema uses 'text' for the quote content
+  author: string;
   user_id?: string;
   created_at?: string;
-  // Add any other properties your quote object might have
+  category?: string;
 }
 
-const Quotes = ({ user }) => {
+interface QuotesProps {
+  user: User | null;
+}
+
+const QuotesPage = ({ user }: QuotesProps) => {
   const supabase = useContext(SupabaseContext);
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [newQuote, setNewQuote] = useState('');
+  const [newQuoteText, setNewQuoteText] = useState('');
+  const [newQuoteCategory, setNewQuoteCategory] = useState('general');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const availableCategories = ['general', 'stoic', 'philosophy', 'wisdom', 'life', 'sports', 'technology', 'inspiration'];
 
   useEffect(() => {
-    if (!user) {
-      setQuotes([]); // Clear quotes if user logs out
+    if (!user || !supabase) {
+      setQuotes([]);
       return;
     }
-
     const fetchQuotes = async () => {
       setIsLoading(true);
       setErrorMessage(null);
       try {
+        // Ensure user_id column exists in your quotes table for this query to work
         const { data, error } = await supabase
           .from('quotes')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Fetch quotes error:', error);
-          setErrorMessage(`Failed to fetch quotes: ${error.message}`);
-        } else {
-          setQuotes(data || []); // Ensure data is not null
-        }
-      } catch (e) {
-        console.error('Unexpected fetch quotes error:', e);
-        setErrorMessage('An unexpected error occurred while fetching quotes.');
+        if (error) throw error;
+        setQuotes(data || []);
+      } catch (e: any) {
+        setErrorMessage(`Failed to fetch quotes: ${e.message}`);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchQuotes();
   }, [user, supabase]);
 
   const addQuote = async () => {
-    if (!newQuote.trim()) {
-      setErrorMessage('Quote cannot be empty.');
-      return;
-    }
-    if (!user) {
-      setErrorMessage('You must be logged in to add a quote.');
-      return;
-    }
-
+    if (!newQuoteText.trim() || !user || !supabase) return;
     setIsLoading(true);
     setErrorMessage(null);
-
+    setSuccessMessage(null);
     try {
-      // Supabase insert returns an object with `data` and `error`
-      // The `data` will be an array of the inserted rows
-      const { data: insertedData, error } = await supabase
+      const { data: newQuote, error } = await supabase
         .from('quotes')
-        .insert([{ user_id: user.id, quote: newQuote }])
-        .select(); // Use .select() to get the inserted row back, including its id and created_at
-
-      if (error) {
-        console.error('Add quote error:', error);
-        setErrorMessage(`Failed to add quote: ${error.message}`);
-      } else {
-        // Prepend the new quote returned from Supabase (which includes id, created_at)
-        if (insertedData && insertedData.length > 0) {
-          setQuotes(prevQuotes => [insertedData[0], ...prevQuotes]);
-        } else {
-          // Fallback if insertedData is not as expected, though .select() should return it
-          // This optimistic update might lack DB-generated fields like 'id' or 'created_at'
-          // but is better than nothing if the above fails.
-          setQuotes(prevQuotes => [{ 
-            quote: newQuote, 
-            user_id: user.id, 
-            created_at: new Date().toISOString() 
-          }, ...prevQuotes]);
-        }
-        setNewQuote('');
-      }
-    } catch (e) {
-      console.error('Unexpected add quote error:', e);
-      setErrorMessage('An unexpected error occurred while adding the quote.');
+        .insert([{ user_id: user.id, text: newQuoteText, category: newQuoteCategory.toLowerCase() }])
+        .select().single();
+      if (error) throw error;
+      if (newQuote) setQuotes(prev => [newQuote, ...prev]);
+      setSuccessMessage("Quote added!");
+      setNewQuoteText('');
+      setNewQuoteCategory('general');
+    } catch (e: any) {
+      setErrorMessage(`Failed to add quote: ${e.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!user) {
-    return <p>Please log in to view and add your quotes.</p>;
-  }
+  if (!user) return <p>Please log in.</p>;
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Your Quotes</h2>
-
-      {errorMessage && <p style={{ color: 'red', marginBottom: '1rem' }}>{errorMessage}</p>}
-
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          value={newQuote}
-          onChange={(e) => setNewQuote(e.target.value)}
-          placeholder="Add a new quote"
-          className="border p-2 w-full mb-2"
-          disabled={isLoading}
-        />
-        <button
-          onClick={addQuote}
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Processing...' : 'Add Quote'}
-        </button>
+    <div style={{ padding: '20px', maxWidth: '700px', margin: 'auto' }}>
+      <h2>Your Quotes</h2>
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+      <div style={{ margin: '2rem 0', padding: '1rem', border: '1px solid #ccc' }}>
+        <h3>Add New Quote</h3>
+        <textarea value={newQuoteText} onChange={(e) => setNewQuoteText(e.target.value)} placeholder="Quote text..." disabled={isLoading} style={{ width: '100%' }} />
+        <select value={newQuoteCategory} onChange={(e) => setNewQuoteCategory(e.target.value)} disabled={isLoading} style={{ width: '100%', margin: '0.5rem 0' }}>
+          {availableCategories.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
+        </select>
+        <button onClick={addQuote} disabled={isLoading}>{isLoading ? 'Adding...' : 'Add Quote'}</button>
       </div>
-
-      {isLoading && quotes.length === 0 && <p>Loading your quotes...</p>}
-
-      <ul className="mt-4 space-y-2">
-        {quotes.map((q, idx) => (
-          // It's better to use a unique ID from the database as a key if available
-          <li key={q.id || idx} className="border p-2 rounded">
-            <p>{q.quote}</p>
-            {/* Optionally display created_at or other details */}
-            {q.created_at && (
-              <p style={{ fontSize: '0.8em', color: 'gray' }}>
-                Added: {new Date(q.created_at).toLocaleString()}
-              </p>
-            )}
+      {isLoading && !quotes.length && <p>Loading quotes...</p>}
+      {!isLoading && !quotes.length && <p>No quotes added yet.</p>}
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {quotes.map((q) => (
+          <li key={q.id} style={{ border: '1px solid #eee', padding: '1rem', marginBottom: '0.5rem' }}>
+            <p>"{q.text}"</p>
+            {q.category && <p><small>Category: {q.category}</small></p>}
+            {q.created_at && <p><small>Added: {new Date(q.created_at).toLocaleString()}</small></p>}
           </li>
         ))}
       </ul>
-      {!isLoading && quotes.length === 0 && !errorMessage && (
-        <p>You haven't added any quotes yet.</p>
-      )}
     </div>
   );
 };
 
-export default Quotes;
+export default QuotesPage;

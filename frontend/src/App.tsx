@@ -1,17 +1,14 @@
-// No 'React' import needed
 import { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { createClient, SupabaseClient, type User, type Session } from '@supabase/supabase-js';
 
-// Ensure the file is at './components/Sidebar.tsx' (Capital S)
-import Sidebar from './components/Sidebar'; 
+import Sidebar from './components/Sidebar'; // Ensure file is named Sidebar.tsx
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Interests from './pages/Interests';
 import Account from './pages/Account';
-// Correctly import the renamed page components
-import QuotesPage from './pages/Quotes'; 
-import AuthPage from './pages/Auth';
+import QuotesPage from './pages/Quotes'; // Renamed from Quotes
+import AuthPage from './pages/Auth';   // Renamed from Auth
 
 import './App.css';
 
@@ -19,15 +16,14 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  const errorMsg = "Supabase URL or Anon Key is missing. Check your frontend .env file.";
-  console.error(errorMsg);
+  console.error("Supabase URL or Anon Key is missing. Check your .env file.");
 }
 
 const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");
 
 export const SupabaseContext = createContext<SupabaseClient>(supabase);
 
-export interface AppContextType { 
+export interface AppContextType {
   user: User | null;
   session: Session | null;
   supabase: SupabaseClient;
@@ -59,11 +55,10 @@ function App() {
 
     getSession();
 
-    // Use `_event` to mark the parameter as intentionally unused
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => { 
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      setLoading(false); 
+      setLoading(false);
     });
 
     return () => {
@@ -72,11 +67,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="loadingScreen">
-        Loading...
-      </div>
-    );
+    return <div className="loadingScreen">Loading...</div>;
   }
 
   return (
@@ -90,7 +81,6 @@ function App() {
               <main className="pageContent">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  {/* Use renamed components in routes */}
                   <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
                   <Route path="/quotes" element={user ? <QuotesPage user={user} /> : <Navigate to="/auth" />} />
                   <Route path="/interests" element={user ? <Interests user={user} /> : <Navigate to="/auth" />} />

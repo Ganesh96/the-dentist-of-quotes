@@ -1,124 +1,110 @@
 import { useEffect, useState, useContext } from 'react';
 import { SupabaseContext } from '../App';
+import { type User } from '@supabase/supabase-js';
 
-const INTEREST_OPTIONS = ['stoic', 'sports', 'general'];
+const INTEREST_OPTIONS = ['stoic', 'sports', 'general', 'philosophy', 'wisdom', 'life', 'technology'];
 
-const Interests = ({ user }) => {
+interface InterestsProps {
+  user: User | null;
+}
+
+interface UserInterest {
+  name: string;
+}
+
+const Interests = ({ user }: InterestsProps) => {
   const supabase = useContext(SupabaseContext);
-
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selectedPredefined, setSelectedPredefined] = useState<string[]>([]);
+  const [userAddedInterests, setUserAddedInterests] = useState<UserInterest[]>([]);
+  const [newInterestInput, setNewInterestInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const [interests, setInterests] = useState<string[]>([]);
-  const [newInterest, setNewInterest] = useState('');
-
-  // Fetch interests from 'profiles' and 'interests'
   useEffect(() => {
-    if (!user) return;
+    if (!user || !supabase) {
+      setLoading(false);
+      return;
+    }
 
     const fetchAllInterests = async () => {
-      // Fetch selected checkboxes from 'profiles'
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('interests')
-        .eq('id', user.id)
-        .single();
+      setLoading(true);
+      setErrorMsg(null);
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles').select('interests').eq('id', user.id).single();
+        if (profileData?.interests) setSelectedPredefined(profileData.interests);
 
-      if (profileData?.interests) setSelected(profileData.interests);
-
-      // Fetch free-form interests from 'interests' table
-      const { data: interestData, error: interestError } = await supabase
-        .from('interests')
-        .select('name')
-        .eq('user_id', user.id);
-
-      if (interestError) console.error(interestError);
-      else setInterests(interestData.map((item: any) => item.name));
-
-      setLoading(false);
+        const { data: userInterestData } = await supabase
+          .from('interests').select('name').eq('user_id', user.id);
+        if (userInterestData) setUserAddedInterests(userInterestData as UserInterest[]);
+      } catch (e: any) {
+        setErrorMsg("An error occurred loading your interests.");
+      } finally {
+        setLoading(false);
+      }
     };
-
     fetchAllInterests();
   }, [user, supabase]);
 
-  const toggleInterest = (interest: string) => {
-    setSelected((prev) =>
-      prev.includes(interest)
-        ? prev.filter((i) => i !== interest)
-        : [...prev, interest]
-    );
-  };
-
-  const saveInterests = async () => {
-    await supabase
-      .from('profiles')
-      .update({ interests: selected })
-      .eq('id', user.id);
-    alert('Interests saved!');
-  };
-
-  const addInterest = async () => {
-    if (!newInterest.trim()) return;
+  const savePredefinedInterests = async () => {
+    if (!user || !supabase) return;
+    setSuccessMsg(null);
+    setErrorMsg(null);
     const { error } = await supabase
-      .from('interests')
-      .insert([{ user_id: user.id, name: newInterest }]);
+      .from('profiles').update({ interests: selectedPredefined }).eq('id', user.id);
+    if (error) setErrorMsg(`Save failed: ${error.message}`);
+    else setSuccessMsg('Predefined interests saved!');
+  };
 
-    if (error) {
-      console.error(error);
-    } else {
-      setInterests([...interests, newInterest]);
-      setNewInterest('');
+  const handleAddUserInterest = async () => {
+    if (!newInterestInput.trim() || !user || !supabase) return;
+    const interestToAdd = newInterestInput.trim().toLowerCase();
+    if (userAddedInterests.some(i => i.name.toLowerCase() === interestToAdd)) {
+        setErrorMsg(`Interest "${interestToAdd}" already added.`);
+        return;
+    }
+    const { data: newInterest, error } = await supabase
+      .from('interests').insert([{ user_id: user.id, name: interestToAdd }]).select().single();
+    if (error) setErrorMsg(`Failed to add interest: ${error.message}`);
+    else if (newInterest) {
+      setUserAddedInterests(prev => [...prev, newInterest as UserInterest]);
+      setNewInterestInput('');
+      setSuccessMsg(`Interest "${interestToAdd}" added!`);
     }
   };
 
-  if (!user) return <p>Please log in to view interests.</p>;
-  if (loading) return <p>Loading interests...</p>;
+  if (!user) return <p>Please log in to manage your interests.</p>;
+  if (loading) return <p>Loading your interests...</p>;
 
   return (
-    <div>
-      <h2 className="text-xl mb-4 font-bold">Select Your Interests</h2>
-      <div className="space-y-2">
-        {INTEREST_OPTIONS.map((option) => (
-          <label key={option} className="block">
-            <input
-              type="checkbox"
-              checked={selected.includes(option)}
-              onChange={() => toggleInterest(option)}
-              className="mr-2"
-            />
-            {option}
-          </label>
-        ))}
-      </div>
-      <button
-        onClick={saveInterests}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Save
-      </button>
-
-      <h2 className="text-lg font-semibold mt-6">Your Added Interests</h2>
-      <ul className="list-disc list-inside">
-        {interests.map((interest, idx) => (
-          <li key={idx}>{interest}</li>
-        ))}
-      </ul>
-
-      <div className="mt-4">
-        <input
-          type="text"
-          value={newInterest}
-          onChange={(e) => setNewInterest(e.target.value)}
-          placeholder="Add new interest"
-          className="border px-2 py-1 mr-2"
-        />
-        <button
-          onClick={addInterest}
-          className="px-4 py-1 bg-green-600 text-white rounded"
-        >
-          Add
-        </button>
-      </div>
+    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+      <h2 style={{ fontSize: '1.5em', marginBottom: '20px' }}>Manage Your Interests</h2>
+      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
+      {successMsg && <p style={{ color: 'green' }}>{successMsg}</p>}
+      <section style={{ marginBottom: '30px' }}>
+        <h3 style={{ fontSize: '1.2em' }}>Predefined Interests</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {INTEREST_OPTIONS.map((option) => (
+            <label key={option}>
+              <input type="checkbox"
+                checked={selectedPredefined.includes(option)}
+                onChange={() => setSelectedPredefined(prev => prev.includes(option) ? prev.filter(i => i !== option) : [...prev, option])}
+              />
+              {option.charAt(0).toUpperCase() + option.slice(1)}
+            </label>
+          ))}
+        </div>
+        <button onClick={savePredefinedInterests} style={{ marginTop: '15px' }}>Save Predefined</button>
+      </section>
+      <section>
+        <h3 style={{ fontSize: '1.2em' }}>Your Custom Interests</h3>
+        <ul>{userAddedInterests.map((interest, idx) => <li key={idx}>{interest.name}</li>)}</ul>
+        <div>
+          <input type="text" value={newInterestInput} onChange={(e) => setNewInterestInput(e.target.value)} placeholder="Add a new interest" />
+          <button onClick={handleAddUserInterest}>Add Custom</button>
+        </div>
+      </section>
     </div>
   );
 };

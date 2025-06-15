@@ -1,40 +1,29 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppContext } from '../App'; // Assuming AppContext is exported from App.tsx
-import styles from './Navbar.module.css'; // Import CSS Module
+import { AppContext } from '../App';
+import styles from './Navbar.module.css';
 
 const Navbar = () => {
   const appContext = useContext(AppContext);
   const user = appContext?.user;
   const supabase = appContext?.supabase;
   const navigate = useNavigate();
-
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Logout error:', error);
-    } else {
-      setDropdownOpen(false);
-      navigate('/auth');
-    }
+    if (error) console.error('Logout error:', error);
+    else navigate('/auth');
   };
-
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.navbarContainer}>
-        <div className={styles.appName}>
-          {/* Optional: You can put an app name or leave it empty if sidebar has it */}
-          {/* <Link to="/">The Dentist of Quotes</Link> */}
-        </div>
         <div className={styles.navMenu}>
           {user ? (
             <div className={styles.dropdown}>
-              <button onClick={toggleDropdown} className={styles.dropdownToggle}>
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} className={styles.dropdownToggle}>
                 {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
               </button>
               {dropdownOpen && (
@@ -43,17 +32,10 @@ const Navbar = () => {
                     <p>Signed in as</p>
                     <p className={styles.dropdownEmail}>{user.email}</p>
                   </div>
-                  <Link
-                    to="/account"
-                    onClick={() => setDropdownOpen(false)}
-                    className={styles.dropdownItem}
-                  >
+                  <Link to="/account" onClick={() => setDropdownOpen(false)} className={styles.dropdownItem}>
                     Account
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className={`${styles.dropdownItem} ${styles.dropdownButton}`}
-                  >
+                  <button onClick={handleLogout} className={`${styles.dropdownItem} ${styles.dropdownButton}`}>
                     Sign out
                   </button>
                 </div>

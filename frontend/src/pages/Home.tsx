@@ -15,8 +15,6 @@ const Home = () => {
   const [loadingQuote, setLoadingQuote] = useState(true);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
   useEffect(() => {
     const fetchDailyQuote = async () => {
       setLoadingQuote(true);
@@ -32,7 +30,7 @@ const Home = () => {
         if (session?.access_token) {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
-        const response = await fetch(`${API_BASE_URL}/api/daily-quote`, { headers });
+        const response = await fetch(`/api/daily-quote`, { headers });
         if (!response.ok) {
           let errorDetail = `Failed to fetch quote: ${response.status}`;
           try {
@@ -50,7 +48,7 @@ const Home = () => {
       }
     };
     fetchDailyQuote();
-  }, [session, appContext?.loading, API_BASE_URL]);
+  }, [session, appContext?.loading]);
 
   return (
     <div className={styles.homeContainer}>

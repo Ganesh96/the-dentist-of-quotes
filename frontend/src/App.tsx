@@ -1,9 +1,8 @@
 import { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { createClient, SupabaseClient, type User, type Session } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient'; // Import the centralized client
+import { SupabaseClient, type User, type Session } from '@supabase/supabase-js';
 
-// CRITICAL: This import assumes your file is located at 'src/components/Sidebar.tsx'
-// with a capital 'S'. Please verify the filename's capitalization.
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -13,15 +12,6 @@ import QuotesPage from './pages/Quotes';
 import AuthPage from './pages/Auth';
 
 import './App.css';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase URL or Anon Key is missing. Check your .env file.");
-}
-
-const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");
 
 export const SupabaseContext = createContext<SupabaseClient>(supabase);
 

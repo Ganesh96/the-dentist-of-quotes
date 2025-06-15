@@ -1,8 +1,22 @@
 // In frontend/src/api.ts
 import { supabase } from './supabaseClient'; // Adjust path as necessary
 
+// frontend/src/api.ts
 export async function getProfile() {
-  const res = await fetch(`/api/me`); // Use relative path
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError || !session) {
+    console.error('Error getting session or no session found:', sessionError);
+    throw new Error('User not authenticated or session expired.');
+  }
+
+  const token = session.access_token;
+
+  const res = await fetch(`/api/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return res.json();
 }
 
